@@ -15,6 +15,7 @@ export const FaderComponent = ({
   const handleMouseDown = useCallback((e) => {
     setIsDragging(true);
     e.preventDefault();
+    e.stopPropagation(); // Prevent the track click from firing
   }, []);
 
   const handleTrackClick = useCallback((e) => {
