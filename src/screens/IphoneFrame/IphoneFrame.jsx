@@ -5,11 +5,21 @@ import { RedoButton } from "../../components/RedoButton";
 import { SectionButton } from "../../components/SectionButton";
 import { UndoButton } from "../../components/UndoButton";
 import { RecordButton } from "../../icons/RecordButton";
+import useMIDIController from "../../utils/useMIDIController";
 import "./style.css";
 
 export const IphoneFrame = () => {
+  const { isConnected, isPlaying, togglePlayPause } = useMIDIController();
+
   return (
     <div className="iphone-frame">
+      {/* MIDI Connection Status Indicator */}
+      <div className="midi-status">
+        <div className={`connection-indicator ${isConnected ? 'connected' : 'disconnected'}`}>
+          {isConnected ? '● MIDI Connected' : '○ MIDI Disconnected'}
+        </div>
+      </div>
+      
       <div className="frame-contents">
         <div className="section-buttons">
           <SectionButton
@@ -48,7 +58,11 @@ export const IphoneFrame = () => {
           <div className="playback-controls">
             <div className="spacer" />
 
-            <PlayButton className="play-button-instance" />
+            <PlayButton 
+              className="play-button-instance" 
+              isPlaying={isPlaying}
+              onToggle={togglePlayPause}
+            />
             <div className="spacer" />
 
             <RecordButton className="record-button" />

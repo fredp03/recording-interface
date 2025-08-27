@@ -2,10 +2,38 @@
   align-items: center;
   background-color: var(--variable-collection-background-color);
   display: flex;
+  flex-direction: column;
   gap: 10px;
   min-height: 100vh;
   padding: 20px;
   position: relative;
+}
+
+.midi-status {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: "Inter", Helvetica;
+  font-size: 11px;
+  color: white;
+}
+
+.connection-indicator.connected {
+  color: #4ade80;
+}
+
+.connection-indicator.disconnected {
+  color: #f87171;
+}
+
+.port-info {
+  font-size: 9px;
+  opacity: 0.7;
+  margin-top: 2px;
 }
 
 .iphone-frame .frame-contents {
