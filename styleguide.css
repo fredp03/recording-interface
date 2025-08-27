@@ -1,0 +1,9 @@
+:root {
+  --button-color: rgba(223, 223, 223, 0.8);
+  --variable-collection-background-color: rgba(87, 87, 87, 1);
+  --variable-collection-fader-activated-color: rgba(116, 116, 116, 1);
+  --variable-collection-fader-deactivated-color: rgba(3, 3, 3, 1);
+  --variable-collection-fader-knob-color: rgba(203, 177, 147, 1);
+  --variable-collection-glass-button-background: rgba(171, 171, 171, 0.2);
+  --variable-collection-record-color: rgba(233, 119, 148, 1);
+}

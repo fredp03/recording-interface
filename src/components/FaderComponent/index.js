@@ -1,0 +1,1 @@
+export { FaderComponent } from "./FaderComponent";

@@ -1,0 +1,114 @@
+.iphone-frame {
+  align-items: center;
+  background-color: var(--variable-collection-background-color);
+  display: flex;
+  gap: 10px;
+  min-height: 100vh;
+  padding: 20px;
+  position: relative;
+}
+
+.iphone-frame .frame-contents {
+  align-items: center;
+  align-self: stretch;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: space-between;
+  padding: 10px;
+  position: relative;
+}
+
+.iphone-frame .section-buttons {
+  align-items: flex-start;
+  align-self: stretch;
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: space-between;
+  padding: 20px 0px;
+  position: relative;
+  width: 100%;
+}
+
+.iphone-frame .section-button-instance {
+  flex: 1 !important;
+  flex-grow: 1 !important;
+  width: unset !important;
+}
+
+.iphone-frame .fader-section {
+  align-items: center;
+  align-self: stretch;
+  display: flex;
+  flex: 1;
+  flex-grow: 1;
+  justify-content: space-between;
+  padding: 46px 22px;
+  position: relative;
+  width: 100%;
+  min-height: 600px;
+}
+
+.iphone-frame .spacer {
+  align-self: stretch;
+  flex: 1;
+  flex-grow: 1;
+  position: relative;
+}
+
+.iphone-frame .fader-component-instance {
+  align-self: center !important;
+  height: auto !important;
+  flex-shrink: 0 !important;
+}
+
+.iphone-frame .controls {
+  align-items: center;
+  align-self: stretch;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 59px;
+  padding: 20px;
+  position: relative;
+  width: 100%;
+}
+
+.iphone-frame .playback-controls {
+  align-items: flex-end;
+  align-self: stretch;
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: space-between;
+  position: relative;
+  width: 100%;
+}
+
+.iphone-frame .play-button-instance {
+  background-image: url(../../../static/img/play-button-1.svg) !important;
+}
+
+.iphone-frame .record-button {
+  height: 34px !important;
+  position: relative !important;
+  width: 34px !important;
+}
+
+.iphone-frame .undo-buttons {
+  align-items: center;
+  align-self: stretch;
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: space-between;
+  position: relative;
+  width: 100%;
+}
+
+.iphone-frame .undo-button-instance {
+  background-image: url(../../../static/img/undo-button-1.svg) !important;
+}
+
+.iphone-frame .redo-button-instance {
+  background-image: url(../../../static/img/redo-button-1.svg) !important;
+}

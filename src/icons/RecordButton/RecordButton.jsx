@@ -1,0 +1,33 @@
+/*
+We're constantly improving the code you see. 
+Please share your feedback here: https://form.asana.com/?k=uvp-HPgd3_hyoXRBw1IcNg&d=1152665201300829
+*/
+
+import React from "react";
+
+export const RecordButton = ({ className }) => {
+  return (
+    <svg
+      className={`record-button ${className}`}
+      fill="none"
+      height="34"
+      viewBox="0 0 35 34"
+      width="35"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        className="path"
+        d="M17.6667 8.1194C22.5714 8.1194 26.5473 12.0954 26.5473 17C26.5473 21.9046 22.5714 25.8806 17.6667 25.8806C12.7621 25.8806 8.78615 21.9046 8.78615 17C8.78615 12.0954 12.7621 8.1194 17.6667 8.1194Z"
+        fill="#E97794"
+      />
+
+      <path
+        className="path"
+        clipRule="evenodd"
+        d="M17.6667 0C27.0556 0 34.6667 7.61116 34.6667 17C34.6667 26.3888 27.0556 34 17.6667 34C8.27791 34 0.666748 26.3888 0.666748 17C0.666748 7.61116 8.27791 0 17.6667 0ZM17.6667 2.02985C9.39896 2.02985 2.6966 8.73221 2.6966 17C2.6966 25.2678 9.39896 31.9701 17.6667 31.9701C25.9345 31.9701 32.6369 25.2678 32.6369 17C32.6369 8.73221 25.9345 2.02985 17.6667 2.02985Z"
+        fill="#E97794"
+        fillRule="evenodd"
+      />
+    </svg>
+  );
+};

@@ -1,0 +1,16 @@
+.section-button {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 9px;
+  position: relative;
+  width: 168px;
+}
+
+.section-button .button {
+  align-self: stretch;
+  height: 25px;
+  position: relative;
+  width: 100%;
+}
