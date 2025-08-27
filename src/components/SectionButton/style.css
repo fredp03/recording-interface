@@ -4,13 +4,24 @@
   flex-direction: column;
   gap: 10px;
   padding: 4px 9px;
-  position: relative;
   width: 168px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+.section-button:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.section-button:active {
+  transform: translateY(0px) scale(0.98);
 }
 
 .section-button .button {
   align-self: stretch;
   height: 25px;
-  position: relative;
   width: 100%;
 }
