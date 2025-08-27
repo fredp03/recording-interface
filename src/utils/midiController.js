@@ -162,6 +162,77 @@ class MIDIController {
     }
   }
 
+  async sendFaderChange(trackName, value) {
+    try {
+      console.log(`Sending fader change for ${trackName}: ${value}`);
+      const response = await fetch(`${this.baseURL}/api/fader`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          track: trackName,
+          value: value 
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        console.log('Fader command sent successfully:', data);
+        return true;
+      } else {
+        console.error('Failed to send fader command:', data.message);
+        return false;
+      }
+    } catch (error) {
+      console.error('Error sending fader command:', error);
+      return false;
+    }
+  }
+
+  async getTrackVolumes() {
+    try {
+      const response = await fetch(`${this.baseURL}/api/track-volumes`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        return data;
+      } else {
+        console.error('Failed to get track volumes');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error getting track volumes:', error);
+      return null;
+    }
+  }
+
+  async triggerTrackDiscovery() {
+    try {
+      console.log('Triggering track discovery...');
+      const response = await fetch(`${this.baseURL}/api/discover-tracks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        console.log('Track discovery triggered:', data.message);
+        return true;
+      } else {
+        console.error('Failed to trigger track discovery:', data.message);
+        return false;
+      }
+    } catch (error) {
+      console.error('Error triggering track discovery:', error);
+      return false;
+    }
+  }
+
   getConnectionStatus() {
     return {
       isConnected: this.isConnected,

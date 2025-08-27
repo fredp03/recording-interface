@@ -30,6 +30,25 @@
   color: #f87171;
 }
 
+.track-status {
+  margin-top: 4px;
+  font-size: 10px;
+}
+
+.track-discovery.found {
+  color: #4ade80;
+}
+
+.track-discovery.searching {
+  color: #fbbf24;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 .port-info {
   font-size: 9px;
   opacity: 0.7;

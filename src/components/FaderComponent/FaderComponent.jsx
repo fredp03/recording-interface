@@ -7,10 +7,21 @@ export const FaderComponent = ({
   className,
   initialValue = 0.5, // Value between 0 and 1
   onChange,
+  value, // External controlled value
 }) => {
-  const [value, setValue] = useState(initialValue);
+  const [internalValue, setInternalValue] = useState(initialValue);
   const [isDragging, setIsDragging] = useState(false);
   const trackRef = useRef(null);
+
+  // Use controlled value if provided, otherwise use internal value
+  const currentValue = value !== undefined ? value : internalValue;
+
+  // Update internal value when external value changes
+  React.useEffect(() => {
+    if (value !== undefined && !isDragging) {
+      setInternalValue(value);
+    }
+  }, [value, isDragging]);
 
   const handleMouseDown = useCallback((e) => {
     setIsDragging(true);
@@ -28,9 +39,11 @@ export const FaderComponent = ({
     // Clamp the value between 0 and 1, inverted since fader goes from top to bottom
     const newValue = Math.max(0, Math.min(1, 1 - (relativeY / totalTrackHeight)));
     
-    setValue(newValue);
+    if (value === undefined) {
+      setInternalValue(newValue);
+    }
     onChange && onChange(newValue);
-  }, [onChange]);
+  }, [onChange, value]);
 
   const handleMouseMove = useCallback((e) => {
     if (!isDragging || !trackRef.current) return;
@@ -42,9 +55,11 @@ export const FaderComponent = ({
     // Clamp the value between 0 and 1, inverted since fader goes from top to bottom
     const newValue = Math.max(0, Math.min(1, 1 - (relativeY / totalTrackHeight)));
     
-    setValue(newValue);
+    if (value === undefined) {
+      setInternalValue(newValue);
+    }
     onChange && onChange(newValue);
-  }, [isDragging, onChange]);
+  }, [isDragging, onChange, value]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -63,9 +78,9 @@ export const FaderComponent = ({
     }
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
-  // Calculate positions based on value
+  // Calculate positions based on current value
   const totalTrackHeight = 576; // Total available track space (596 - 20 for handle)
-  const handlePosition = (1 - value) * totalTrackHeight; // Handle position from top
+  const handlePosition = (1 - currentValue) * totalTrackHeight; // Handle position from top
   const topTrackHeight = handlePosition; // Top track goes from 0 to handle position
   const bottomTrackHeight = totalTrackHeight - handlePosition; // Bottom track goes from handle to end
 
@@ -108,4 +123,5 @@ FaderComponent.propTypes = {
   faderName: PropTypes.string,
   initialValue: PropTypes.number,
   onChange: PropTypes.func,
+  value: PropTypes.number, // External controlled value
 };

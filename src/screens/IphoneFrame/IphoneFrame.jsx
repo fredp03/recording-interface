@@ -9,7 +9,25 @@ import useMIDIController from "../../utils/useMIDIController";
 import "./style.css";
 
 export const IphoneFrame = () => {
-  const { isConnected, isPlaying, togglePlayPause } = useMIDIController();
+  const { 
+    isConnected, 
+    isPlaying, 
+    backingVolume,
+    trackDiscoveryComplete,
+    togglePlayPause, 
+    sendFaderChange,
+    triggerTrackDiscovery 
+  } = useMIDIController();
+
+  const handleBackingFaderChange = (value) => {
+    console.log('Backing fader changed:', value);
+    sendFaderChange('Backing', value);
+  };
+
+  const handleMeFaderChange = (value) => {
+    console.log('Me fader changed:', value);
+    // TODO: Implement "Me" fader when ready
+  };
 
   return (
     <div className="iphone-frame">
@@ -18,6 +36,13 @@ export const IphoneFrame = () => {
         <div className={`connection-indicator ${isConnected ? 'connected' : 'disconnected'}`}>
           {isConnected ? '● MIDI Connected' : '○ MIDI Disconnected'}
         </div>
+        {isConnected && (
+          <div className="track-status">
+            <div className={`track-discovery ${trackDiscoveryComplete ? 'found' : 'searching'}`}>
+              {trackDiscoveryComplete ? '♪ Backing Track Found' : '🔍 Finding Backing Track...'}
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="frame-contents">
@@ -41,8 +66,9 @@ export const IphoneFrame = () => {
 
           <FaderComponent
             className="fader-component-instance"
-            initialValue={0.3}
+            value={backingVolume}
             faderName="Backing"
+            onChange={handleBackingFaderChange}
           />
           <div className="spacer" />
 
@@ -50,6 +76,7 @@ export const IphoneFrame = () => {
             className="fader-component-instance"
             initialValue={0.7}
             faderName="Me"
+            onChange={handleMeFaderChange}
           />
           <div className="spacer" />
         </div>

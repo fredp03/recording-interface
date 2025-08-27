@@ -5,6 +5,8 @@ const BACKEND_URL = 'http://localhost:3001';
 const useMIDIController = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [backingVolume, setBackingVolume] = useState(0.0);
+  const [trackDiscoveryComplete, setTrackDiscoveryComplete] = useState(false);
 
   useEffect(() => {
     const checkConnection = async () => {
@@ -30,6 +32,17 @@ const useMIDIController = () => {
       }
     };
 
+    const pollTrackVolumes = async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/track-volumes`);
+        const data = await response.json();
+        setBackingVolume(data.backing);
+        setTrackDiscoveryComplete(data.backing_track_discovered);
+      } catch (error) {
+        console.error('Failed to get track volumes:', error);
+      }
+    };
+
     // Initial connection check
     checkConnection();
 
@@ -39,10 +52,14 @@ const useMIDIController = () => {
     // Poll for play state every 500ms for responsive UI updates
     const playStateInterval = setInterval(pollPlayState, 500);
 
+    // Poll for track volumes every 1 second
+    const volumeInterval = setInterval(pollTrackVolumes, 1000);
+
     // Cleanup function
     return () => {
       clearInterval(connectionInterval);
       clearInterval(playStateInterval);
+      clearInterval(volumeInterval);
     };
   }, []);
 
@@ -76,10 +93,69 @@ const useMIDIController = () => {
     }
   };
 
+  const sendFaderChange = async (trackName, value) => {
+    console.log(`Attempting to send fader change for ${trackName}: ${value}`);
+    
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/fader`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          track: trackName.toLowerCase(),
+          value: value
+        })
+      });
+
+      const data = await response.json();
+      console.log('Fader API response:', data);
+      
+      if (data.status === 'ok') {
+        console.log(`Fader changed for ${trackName}: ${value}`);
+        return true;
+      } else {
+        console.error('Failed to send fader change:', data.message);
+        return false;
+      }
+    } catch (error) {
+      console.error('Failed to send fader change:', error);
+      return false;
+    }
+  };
+
+  const triggerTrackDiscovery = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/discover-tracks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const data = await response.json();
+      
+      if (data.status === 'ok') {
+        console.log('Track discovery triggered');
+        return true;
+      } else {
+        console.error('Failed to trigger track discovery:', data.message);
+        return false;
+      }
+    } catch (error) {
+      console.error('Failed to trigger track discovery:', error);
+      return false;
+    }
+  };
+
   return {
     isConnected,
     isPlaying,
-    togglePlayPause
+    backingVolume,
+    trackDiscoveryComplete,
+    togglePlayPause,
+    sendFaderChange,
+    triggerTrackDiscovery
   };
 };
 
