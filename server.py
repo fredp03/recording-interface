@@ -183,69 +183,38 @@ def send_mcu_initialization():
             touch_msg = Message('note_on', channel=0, note=0x68 + channel, velocity=0x7F)
             midi_out.send(touch_msg)
             time.sleep(0.01)
-            
+
             # Set fader position to establish communication
             fader_msg = Message('pitchwheel', channel=channel, pitch=0)
             midi_out.send(fader_msg)
             time.sleep(0.01)
-            
+
             # Release fader touch
-            touch_off_msg = Message('note_off', channel=0, note=0x68 + channel, velocity=0x00)
+            touch_off_msg = Message('note_on', channel=0, note=0x68 + channel, velocity=0x00)
             midi_out.send(touch_off_msg)
             time.sleep(0.01)
-        
-        # Step 4: Request LCD updates for all channels by clearing and requesting refresh
+
+        # Step 4: Force Scribble Strip updates by selecting each track
         for channel in range(8):
-            # Clear LCD first - specifically target the track name area
-            clear_lcd_msg = Message('sysex', data=[0x00, 0x00, 0x66, 0x14, 0x12, channel * 7, 0x00])
-            midi_out.send(clear_lcd_msg)
+            select_on = Message('note_on', channel=0, note=0x18 + channel, velocity=0x7F)
+            midi_out.send(select_on)
+            time.sleep(0.05)
+            select_off = Message('note_on', channel=0, note=0x18 + channel, velocity=0x00)
+            midi_out.send(select_off)
             time.sleep(0.02)
-            
-            # Request track name by selecting track (this forces name display)
-            track_select_msg = Message('note_on', channel=0, note=0x18 + channel, velocity=0x7F)
-            midi_out.send(track_select_msg)
-            time.sleep(0.05)  # Longer wait for track name response
-            track_select_off_msg = Message('note_off', channel=0, note=0x18 + channel, velocity=0x00)
-            midi_out.send(track_select_off_msg)
-            time.sleep(0.02)
-        
-        # Step 5: Force track name display by sending track name line requests
-        # Track names appear at offsets: 0, 7, 14, 21, 28, 35, 42, 49 for channels 0-7
-        track_name_offsets = [0, 7, 14, 21, 28, 35, 42, 49]
-        for offset in track_name_offsets:
-            # Request specific track name LCD line
-            track_name_request = Message('sysex', data=[0x00, 0x00, 0x66, 0x14, 0x12, offset, 0x00])
-            midi_out.send(track_name_request)
-            time.sleep(0.03)
-        
-        # Step 6: Send special track name display request command
-        # This is a specific MCU command to force track name display
-        track_name_display = Message('sysex', data=[0x00, 0x00, 0x66, 0x14, 0x0F])  # Force track name display
-        midi_out.send(track_name_display)
-        time.sleep(0.1)
-        
-        # Step 7: Navigate banks to force complete LCD refresh
-        # Bank right then left to force all track names to update
+
+        # Step 5: Navigate banks to force complete LCD refresh
         bank_right_msg = Message('note_on', channel=0, note=0x2F, velocity=0x7F)  # Bank right
         midi_out.send(bank_right_msg)
         time.sleep(0.05)
-        bank_right_off_msg = Message('note_off', channel=0, note=0x2F, velocity=0x00)
+        bank_right_off_msg = Message('note_on', channel=0, note=0x2F, velocity=0x00)
         midi_out.send(bank_right_off_msg)
         time.sleep(0.3)  # Wait for bank change to complete
-        
-        # Return to bank 0 - this should trigger track name display
-        bank_left_msg = Message('note_on', channel=0, note=0x2E, velocity=0x7F)  # Bank left
-        midi_out.send(bank_right_msg)
-        time.sleep(0.05)
-        bank_right_off_msg = Message('note_off', channel=0, note=0x2F, velocity=0x00)
-        midi_out.send(bank_right_off_msg)
-        time.sleep(0.2)  # Wait for bank change to complete
-        
-        # Return to bank 0
+
         bank_left_msg = Message('note_on', channel=0, note=0x2E, velocity=0x7F)  # Bank left
         midi_out.send(bank_left_msg)
         time.sleep(0.05)
-        bank_left_off_msg = Message('note_off', channel=0, note=0x2E, velocity=0x00)
+        bank_left_off_msg = Message('note_on', channel=0, note=0x2E, velocity=0x00)
         midi_out.send(bank_left_off_msg)
         time.sleep(0.2)  # Wait for return to bank 0
         
@@ -302,19 +271,15 @@ def reset_mcu_handshake():
                 reset_attempts += 1
             current_bank = 0  # Force set to 0
             
-            # Step 6: Clear LCD displays and force refresh
-            for channel in range(8):
-                # Send LCD clear command
-                lcd_clear = Message('sysex', data=[0x00, 0x00, 0x66, 0x14, 0x12, channel*7, 0x00])
-                midi_out.send(lcd_clear)
-                time.sleep(0.02)
-                
-            # Step 7: Force LCD refresh by requesting text updates
+            # Step 6: Briefly select each channel to prompt Scribble Strip updates
             time.sleep(0.3)
             for channel in range(8):
-                lcd_request = Message('sysex', data=[0x00, 0x00, 0x66, 0x14, 0x12, channel*7, 0x00])
-                midi_out.send(lcd_request)
-                time.sleep(0.02)
+                select_on = Message('note_on', channel=0, note=0x18 + channel, velocity=0x7F)
+                midi_out.send(select_on)
+                time.sleep(0.01)
+                select_off = Message('note_on', channel=0, note=0x18 + channel, velocity=0x00)
+                midi_out.send(select_off)
+                time.sleep(0.05)
                 
         logger.info("MCU handshake reset complete - ready for track discovery")
         time.sleep(0.8)  # Longer wait for complete reset processing
@@ -340,8 +305,8 @@ def handle_midi_message(message):
             logger.debug(f"SysEx length: {len(message.data)}")
             
             # Handle MCU handshake - acknowledge ping messages (bypass silence period)
-            if (len(message.data) >= 7 and 
-                message.data[:4] == [0x00, 0x00, 0x66, 0x14] and 
+            if (len(message.data) >= 7 and
+                tuple(message.data[:4]) == (0x00, 0x00, 0x66, 0x14) and
                 message.data[4] == 0x20):  # MCU ping
                 logger.info("MCU handshake condition matched!")
                 # Send acknowledgment with command 0x21
@@ -364,8 +329,8 @@ def handle_midi_message(message):
         # Log all incoming messages for debugging
         logger.debug(f"Received MIDI message: {message}")
         
-        # Handle volume feedback from Ableton (CC7 messages)
-        if message.type == 'control_change':
+        # Handle volume feedback from Ableton
+        if message.type in ('control_change', 'pitchwheel'):
             handle_volume_feedback(message)
             return
             
@@ -477,21 +442,25 @@ def determine_channel_from_offset(offset):
     return None
 
 def handle_volume_feedback(message):
-    """Handle volume feedback from Ableton via CC7 messages."""
+    """Handle volume feedback from Ableton via pitchwheel or CC7 messages."""
     global backing_track_volume, backing_track_channel, current_bank
-    
+
     try:
-        # Only process CC7 (volume) messages
-        if message.control == 7:
-            channel = message.channel
-            value = message.value / 127.0  # Convert to 0.0-1.0 range
-            
-            # Check if this is feedback for the backing track
-            if (backing_track_bank == current_bank and 
-                backing_track_channel == channel):
-                backing_track_volume = value
-                logger.debug(f"Backing track volume updated: {value:.2f}")
-                
+        channel = message.channel
+
+        if message.type == 'pitchwheel':
+            value = message.pitch / 16383.0  # 14-bit resolution
+        elif message.type == 'control_change' and message.control == 7:
+            value = message.value / 127.0
+        else:
+            return
+
+        # Check if this is feedback for the backing track
+        if (backing_track_bank == current_bank and
+            backing_track_channel == channel):
+            backing_track_volume = value
+            logger.debug(f"Backing track volume updated: {value:.2f}")
+
     except Exception as e:
         logger.error(f"Error handling volume feedback: {e}")
 
@@ -548,13 +517,11 @@ def send_bank_command(command):
             logger.error(f"Unknown bank command: {command}")
             return False
             
-        # Send note_on for bank command
+        # Send note_on for bank command and release with velocity 0
         msg = Message('note_on', channel=0, note=command_code, velocity=127)
         midi_out.send(msg)
-        
-        # Send note_off after short delay
         time.sleep(0.01)
-        msg_off = Message('note_off', channel=0, note=command_code, velocity=0)
+        msg_off = Message('note_on', channel=0, note=command_code, velocity=0)
         midi_out.send(msg_off)
         
         # Update current bank tracking
@@ -594,18 +561,21 @@ def discover_backing_track():
         
         for bank_num in range(max_banks_to_scan):
             logger.info(f"Scanning bank {bank_num} for 'Backing' track...")
-            
-            # Request LCD text updates for all channels in current bank
+
+            # Force Ableton to send track names by briefly selecting each channel
             try:
                 for channel in range(8):
-                    # Send LCD text request (SysEx message to request track names)
-                    lcd_request = Message('sysex', data=[0x00, 0x00, 0x66, 0x14, 0x12, channel*7, 0x00])
-                    midi_out.send(lcd_request)
-                    time.sleep(0.02)  # Slightly longer delay for better reliability
+                    # Selecting a track triggers Live to resend the scribble strip text
+                    select_on = Message('note_on', channel=0, note=0x18 + channel, velocity=0x7F)
+                    midi_out.send(select_on)
+                    time.sleep(0.01)
+                    select_off = Message('note_on', channel=0, note=0x18 + channel, velocity=0x00)
+                    midi_out.send(select_off)
+                    time.sleep(0.05)
             except Exception as e:
-                logger.debug(f"Error sending LCD requests: {e}")
-            
-            # Wait longer for LCD updates to populate after reset
+                logger.debug(f"Error requesting track names: {e}")
+
+            # Allow time for Ableton to send back LCD updates
             time.sleep(1.2)  # Increased wait time for better reliability
             
             # Check if we found "Backing" in current bank
@@ -631,7 +601,7 @@ def discover_backing_track():
 
 def send_backing_fader_command(value):
     """Send volume command to the Backing track."""
-    global backing_track_bank, backing_track_channel, current_bank
+    global backing_track_bank, backing_track_channel, current_bank, backing_track_volume
     
     if not track_discovery_complete or backing_track_channel is None:
         logger.warning("Backing track not discovered yet, triggering discovery...")
@@ -651,11 +621,12 @@ def send_backing_fader_command(value):
                 else:
                     send_bank_command('BANK_LEFT')
                 time.sleep(0.1)
-                
-        # Send CC7 (volume) command to the backing track
-        cc_value = int(value * 127)  # Convert 0.0-1.0 to 0-127
-        msg = Message('control_change', channel=backing_track_channel, control=7, value=cc_value)
+
+        # Send pitchwheel (14-bit) command to the backing track
+        pitch_value = int(value * 16383)  # Convert 0.0-1.0 to 0-16383
+        msg = Message('pitchwheel', channel=backing_track_channel, pitch=pitch_value)
         midi_out.send(msg)
+        backing_track_volume = value  # reflect change immediately
         
         logger.info(f"Sent volume {value:.2f} to Backing track (Bank {backing_track_bank}, Channel {backing_track_channel})")
         
@@ -705,12 +676,12 @@ def send_mcu_message(command, velocity=127):
         msg = Message('note_on', channel=0, note=command, velocity=velocity)
         midi_out.send(msg)
         logger.info(f"Sent MCU command: 0x{command:02X} (velocity={velocity})")
-        
-        # Send note_off after short delay to complete button press
+
+        # Send note_on with velocity 0 after short delay to complete button press
         time.sleep(0.01)  # 10ms delay
-        msg_off = Message('note_off', channel=0, note=command, velocity=0)
+        msg_off = Message('note_on', channel=0, note=command, velocity=0)
         midi_out.send(msg_off)
-        logger.debug(f"Sent MCU note_off: 0x{command:02X}")
+        logger.debug(f"Sent MCU note_off (velocity 0): 0x{command:02X}")
         
         # Schedule end of silence period
         def end_silence():
