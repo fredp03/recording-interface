@@ -1,7 +1,35 @@
 .play-button {
+  background: none;
+  border: none;
+  padding: 0;
+  height: 30px;
+  width: 23px;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.play-button.play-state {
   background-image: url(../../../static/img/play-button.svg);
   background-size: 100% 100%;
-  height: 30px;
-  position: relative;
-  width: 23px;
+  background-repeat: no-repeat;
+}
+
+.play-button.pause-state {
+  background: none;
+}
+
+.play-button.pause-state svg {
+  width: 14px;
+  height: 26px;
+}
+
+.play-button:hover {
+  opacity: 0.8;
+}
+
+.play-button:active {
+  transform: scale(0.95);
 }
