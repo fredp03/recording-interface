@@ -364,8 +364,8 @@ def handle_midi_message(message):
         # Log all incoming messages for debugging
         logger.debug(f"Received MIDI message: {message}")
         
-        # Handle volume feedback from Ableton (CC7 messages)
-        if message.type == 'control_change':
+        # Handle volume feedback from Ableton
+        if message.type in ('control_change', 'pitchwheel'):
             handle_volume_feedback(message)
             return
             
@@ -477,21 +477,25 @@ def determine_channel_from_offset(offset):
     return None
 
 def handle_volume_feedback(message):
-    """Handle volume feedback from Ableton via CC7 messages."""
+    """Handle volume feedback from Ableton."""
     global backing_track_volume, backing_track_channel, current_bank
-    
+
     try:
-        # Only process CC7 (volume) messages
-        if message.control == 7:
+        if message.type == 'pitchwheel':
             channel = message.channel
-            value = message.value / 127.0  # Convert to 0.0-1.0 range
-            
-            # Check if this is feedback for the backing track
-            if (backing_track_bank == current_bank and 
+            value = (message.pitch + 8192) / 16383.0
+            if (backing_track_bank == current_bank and
                 backing_track_channel == channel):
                 backing_track_volume = value
                 logger.debug(f"Backing track volume updated: {value:.2f}")
-                
+        elif message.type == 'control_change' and message.control == 7:
+            channel = message.channel
+            value = message.value / 127.0
+            if (backing_track_bank == current_bank and
+                backing_track_channel == channel):
+                backing_track_volume = value
+                logger.debug(f"Backing track volume updated (CC7): {value:.2f}")
+
     except Exception as e:
         logger.error(f"Error handling volume feedback: {e}")
 
@@ -594,18 +598,20 @@ def discover_backing_track():
         
         for bank_num in range(max_banks_to_scan):
             logger.info(f"Scanning bank {bank_num} for 'Backing' track...")
-            
-            # Request LCD text updates for all channels in current bank
+
+            # Trigger scribble-strip updates by briefly selecting each track
             try:
                 for channel in range(8):
-                    # Send LCD text request (SysEx message to request track names)
-                    lcd_request = Message('sysex', data=[0x00, 0x00, 0x66, 0x14, 0x12, channel*7, 0x00])
-                    midi_out.send(lcd_request)
-                    time.sleep(0.02)  # Slightly longer delay for better reliability
+                    select_msg = Message('note_on', channel=0, note=0x18 + channel, velocity=0x7F)
+                    midi_out.send(select_msg)
+                    time.sleep(0.05)
+                    select_off = Message('note_off', channel=0, note=0x18 + channel, velocity=0)
+                    midi_out.send(select_off)
+                    time.sleep(0.02)
             except Exception as e:
-                logger.debug(f"Error sending LCD requests: {e}")
-            
-            # Wait longer for LCD updates to populate after reset
+                logger.debug(f"Error sending track select messages: {e}")
+
+            # Wait for LCD updates to populate after selections
             time.sleep(1.2)  # Increased wait time for better reliability
             
             # Check if we found "Backing" in current bank
@@ -652,11 +658,17 @@ def send_backing_fader_command(value):
                     send_bank_command('BANK_LEFT')
                 time.sleep(0.1)
                 
-        # Send CC7 (volume) command to the backing track
-        cc_value = int(value * 127)  # Convert 0.0-1.0 to 0-127
-        msg = Message('control_change', channel=backing_track_channel, control=7, value=cc_value)
+        # Send pitchwheel (fader) command to the backing track
+        pitch = int(value * 0x3FFF) - 0x2000  # Convert 0.0-1.0 to -8192..8191
+        touch_on = Message('note_on', channel=0, note=0x68 + backing_track_channel, velocity=0x7F)
+        midi_out.send(touch_on)
+        time.sleep(0.01)
+        msg = Message('pitchwheel', channel=backing_track_channel, pitch=pitch)
         midi_out.send(msg)
-        
+        time.sleep(0.01)
+        touch_off = Message('note_off', channel=0, note=0x68 + backing_track_channel, velocity=0)
+        midi_out.send(touch_off)
+
         logger.info(f"Sent volume {value:.2f} to Backing track (Bank {backing_track_bank}, Channel {backing_track_channel})")
         
         # Navigate back to user's preferred bank if needed
