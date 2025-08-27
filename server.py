@@ -305,8 +305,8 @@ def handle_midi_message(message):
             logger.debug(f"SysEx length: {len(message.data)}")
             
             # Handle MCU handshake - acknowledge ping messages (bypass silence period)
-            if (len(message.data) >= 7 and 
-                message.data[:4] == [0x00, 0x00, 0x66, 0x14] and 
+            if (len(message.data) >= 7 and
+                tuple(message.data[:4]) == (0x00, 0x00, 0x66, 0x14) and
                 message.data[4] == 0x20):  # MCU ping
                 logger.info("MCU handshake condition matched!")
                 # Send acknowledgment with command 0x21
