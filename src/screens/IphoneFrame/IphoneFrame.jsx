@@ -9,7 +9,7 @@ import "./style.css";
 
 export const IphoneFrame = () => {
   return (
-    <div className="iphone-frame" data-model-id="1:359">
+    <div className="iphone-frame">
       <div className="frame-contents">
         <div className="section-buttons">
           <SectionButton
